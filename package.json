@@ -1,0 +1,13 @@
+{
+  "name": "@ai.all/aiall",
+  "version": "0.2.0",
+  "description": "Portable AI agent instructions and skills initializer, detector and validator",
+  "type": "module",
+  "bin": {"aiall": "./bin/cli.js"},
+  "scripts": {"test": "node --test", "check": "node --check bin/cli.js && node --check src/core.js && node --test"},
+  "files": ["bin/", "src/", "templates/", "README.md", "LICENSE"],
+  "engines": {"node": ">=18"},
+  "license": "MIT",
+  "repository": {"type": "git", "url": "git+https://github.com/ai-all-ai/aiall.git"},
+  "keywords": ["ai", "agents", "instructions", "codex", "claude", "gemini", "cursor", "skills", "cli"]
+}
