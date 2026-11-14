@@ -23,42 +23,45 @@ AI-ALL creates a project-wide `ALL.md` registry and minimal native entrypoints, 
 
 ## Quick start
 
-Install nothing permanently; the command above works in any project directory after publication.
-
-The above works in any project directory once the version is published. From a source checkout, run:
+Run the commands in the root folder of your project. Nothing is installed permanently:
 
 ```bash
-node ./bin/cli.js init --path /absolute/path/to/your-project
-node ./bin/cli.js check --path /absolute/path/to/your-project
+npx @ai.all/aiall init     # creates the files listed below; existing files are kept
+npx @ai.all/aiall check    # verifies the files and the links in ALL.md
 ```
 
+Then open `ALL.md` and add your project's own rules below the packs block. Commit the files (see [Git and team workflows](#git-and-team-workflows)).
+
 Requires Node.js 18 or newer. No third-party runtime dependencies.
+
+To run from a source checkout instead, use `node ./bin/cli.js` in place of `npx @ai.all/aiall`, and pass `--path` with the project folder.
 
 ## Commands
 
 | Command | Behavior | Writes files? |
 | --- | --- | --- |
-| `init` | Create missing `ALL.md`, initial guides, configured native entrypoints and `.ai/aiall.json` | Yes; create-only |
+| `init` | Create missing `ALL.md`, initial guides, configured native entrypoints and `.ai/aiall.json`. With `--detect`, select the agents found on PATH or in the project | Yes; create-only |
 | `packs` | `packs list`, `packs add <name>`, `packs remove <name>`: enable or disable packs and refresh the packs block in `ALL.md` | Yes; `--dry-run` previews |
 | `detect` | Report detectable CLI installation, adapter-specific project files and configured selection separately | No |
-| `sync` | Restore missing baseline docs/entrypoints only; **never overwrite** | Yes; create-only |
+| `sync` | Create missing baseline docs and entrypoints, and refresh the packs block in `ALL.md`; never overwrites your text | Yes |
 | `check` | Check required files, managed adapter differences, Markdown paths in `ALL.md` | No |
 | `doctor` | `check` plus detection evidence | No |
-| `upgrade` | Print guidance for safe package upgrade | No |
+| `upgrade` | Print the installed version. With `--check`, compare it with npm and print the upgrade command | No; `--check` reads the npm registry |
 | `--version` | Print installed CLI version | No |
 
 Common options:
 
 ```bash
-node bin/cli.js init --path /projects/shop
-node bin/cli.js init --path /projects/shop --all-agents --dry-run
-node bin/cli.js init --path /projects/shop --agents codex,claude,gemini,cursor,copilot
-node bin/cli.js detect --path /projects/shop --json
-node bin/cli.js sync --path /projects/shop
-node bin/cli.js doctor --path /projects/shop
-node bin/cli.js check --path /projects/shop
-node bin/cli.js check --path /projects/shop --agents cursor
-node bin/cli.js packs add ds7/aiall-pack.json --path /projects/shop --dry-run
+npx @ai.all/aiall init --path /projects/shop
+npx @ai.all/aiall init --path /projects/shop --all-agents --dry-run
+npx @ai.all/aiall init --path /projects/shop --detect --dry-run
+npx @ai.all/aiall init --path /projects/shop --agents codex,claude,gemini,cursor,copilot
+npx @ai.all/aiall detect --path /projects/shop --json
+npx @ai.all/aiall sync --path /projects/shop
+npx @ai.all/aiall doctor --path /projects/shop
+npx @ai.all/aiall check --path /projects/shop
+npx @ai.all/aiall check --path /projects/shop --agents cursor
+npx @ai.all/aiall packs add ds7/aiall-pack.json --path /projects/shop --dry-run
 ```
 
 Default native adapters for a new project: `codex`, `claude`, `gemini`. Optional adapters: `cursor`, `copilot`, `windsurf`, `roo`, `antigravity`. `opencode` and some other coding agents can read `AGENTS.md` directly, so no duplicate native file is generated for them. `init --agents` and `sync --agents` save the selected list in `.ai/aiall.json`. Without an explicit option, `init` and `sync` use the saved list, or the defaults when no config exists. `check` and `doctor` follow the same rule; passing `--agents` to either performs a one-off check and does not change configuration.
@@ -76,7 +79,8 @@ Default native adapters for a new project: `codex`, `claude`, `gemini`. Optional
 - For `detect`, `results` is the per-agent evidence list. For `doctor`, it contains both `files` (the check results) and `detected` (that evidence list).
 - Custom entrypoints that do not contain AI-ALL's generated marker result in **warnings**, not destructive repairs; verify actual native loading in the IDE.
 - The CLI refuses to read or write through symlinks in managed paths and flags unsafe or external `ALL.md` links.
-- No network requests, automatic Git operations or postinstall scripts are used.
+- No network requests are made by default. `upgrade --check` reads the npm registry, and only when you pass the flag.
+- No automatic Git operations or postinstall scripts are used.
 - No direct generation of slashes/commands/skills for every IDE: their native discovery formats vary and must be proven per tool.
 
 ## Files
@@ -143,7 +147,7 @@ npx @ai.all/ds7
 
 DS7 runs `aiall init` itself and adds the `ds7` pack. Install order does not matter.
 
-> Packs are available from `0.3.0`.
+> Packs were added in version 0.3.0.
 
 ## Managing permanent instructions
 
@@ -153,7 +157,7 @@ When a user wants a permanent rule: search existing references, avoid duplicates
 
 ## Git and team workflows
 
-Commit `ALL.md`, `AGENTS.md`, the selected native entrypoints, `.ai/`, and the project-owned skills. Do **not** commit API tokens, `.env` secrets or local detection caches. The initializer does not mutate `.gitignore`, change branches, stage files or commit automatically. For simultaneous agents, use separate worktrees and review diffs; `git status` is useful but is not a lock.
+Commit `ALL.md`, `AGENTS.md`, the selected native entrypoints, `.ai/`, and the project-owned skills. Do **not** commit API tokens or `.env` secrets. AI-ALL does not read or change `.gitignore`, does not change branches, does not stage files and does not commit. Add your own ignore rules for dependencies, build output and local secrets; the `.gitignore` of this repository is one example. For simultaneous agents, use separate worktrees and review diffs; `git status` is useful but is not a lock.
 
 Optional CI workflow for the **target** repository (you add it yourself):
 
@@ -168,7 +172,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npx --yes @ai.all/aiall@0.3.0 check
+      - run: npx --yes @ai.all/aiall@1.0.0 check
 ```
 
 Pin a tested release and update deliberately; CI checks structure, **not** that each IDE loads the files.
@@ -195,6 +199,7 @@ Vendor documentation is linked in [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md)
 npm test
 npm run check
 npm pack --dry-run
+bash scripts/release-check.sh   # clean tree, unused tag, CHANGELOG section, unused npm version
 node bin/cli.js --version
 ```
 
@@ -208,6 +213,10 @@ npm publish --access public
 ```
 
 Never republish an existing version. npm authentication/passkey approval is required; npm publishing remains manual. After the npm version is published and verified, push the matching tag. The Homebrew formula in [ai-all-ai/homebrew-tap](https://github.com/ai-all-ai/homebrew-tap) follows npm `latest` and is updated by a pull request within six hours. See [docs/RELEASE.md](docs/RELEASE.md) for the full release sequence.
+
+## Contributing and security
+
+Contribution rules: [CONTRIBUTING.md](CONTRIBUTING.md). Report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
 
 ## License
 

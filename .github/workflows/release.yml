@@ -1,0 +1,51 @@
+name: GitHub release
+
+# Creates or updates the GitHub Release for a version tag. The release notes are
+# the CHANGELOG.md section for that version. npm publishing is not part of this workflow.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Check the tag matches package.json
+        run: |
+          version="${TAG#v}"
+          package_version="$(node -p "require('./package.json').version")"
+          if [[ "$version" != "$package_version" ]]; then
+            echo "tag $TAG does not match package.json $package_version" >&2
+            exit 1
+          fi
+
+      - name: Extract release notes from CHANGELOG.md
+        run: |
+          version="${TAG#v}"
+          awk -v v="$version" '
+            $0 ~ "^## \\[" v "\\]" { on=1; next }
+            on && /^## \[/ { exit }
+            on { print }
+          ' CHANGELOG.md | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}' > "$RUNNER_TEMP/notes.md"
+          test -s "$RUNNER_TEMP/notes.md" || { echo "no CHANGELOG section for $version" >&2; exit 1; }
+
+      - name: Create or update the release
+        run: |
+          prerelease=""
+          [[ "$TAG" == *-* ]] && prerelease="--prerelease"
+          title="AI-ALL $TAG"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --title "$title" --notes-file "$RUNNER_TEMP/notes.md" $prerelease
+          else
+            gh release create "$TAG" --title "$title" --notes-file "$RUNNER_TEMP/notes.md" --verify-tag $prerelease
+          fi

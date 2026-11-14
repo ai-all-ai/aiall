@@ -16,6 +16,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
+      - name: Check formatting (Linux only; Windows checkouts may use CRLF)
+        if: matrix.os == 'ubuntu-latest'
+        run: npm run format:check
       - run: npm run check
       - run: npm pack --dry-run
       - name: Smoke-test packed CLI in an isolated project

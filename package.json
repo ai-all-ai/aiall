@@ -1,6 +1,6 @@
 {
   "name": "@ai.all/aiall",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "description": "Portable AI agent instructions and skills initializer, detector and validator",
   "homepage": "https://github.com/ai-all-ai/aiall#readme",
   "type": "module",
@@ -9,7 +9,9 @@
   },
   "scripts": {
     "test": "node --test",
-    "check": "node --check bin/cli.js && node --check src/core.js && node --test"
+    "check": "node --check bin/cli.js && node --check src/core.js && node --test",
+    "format": "npx --yes prettier@3.6.2 --write \"**/*.{js,mjs,cjs,json,yml,yaml}\"",
+    "format:check": "npx --yes prettier@3.6.2 --check \"**/*.{js,mjs,cjs,json,yml,yaml}\""
   },
   "files": [
     "bin/",
