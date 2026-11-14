@@ -1,5 +1,8 @@
 # AI Governance — maintaining instructions
 
+> **How it fits with DS7.** [DS7](https://github.com/ai-all-ai/ds7) (`@ai.all/ds7`) is a web architecture standard delivered as the `ds7` pack of AI-ALL. AI-ALL works without it. For web projects, install the pack; see [Packs](../README.md#packs).
+
+
 This document applies only when changing instructions, skills, adapters or integration descriptions.
 
 ## Add or update a rule

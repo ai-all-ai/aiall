@@ -1,5 +1,8 @@
 # Adapter sources and verification notes
 
+> **How it fits with DS7.** [DS7](https://github.com/ai-all-ai/ds7) (`@ai.all/ds7`) is a web architecture standard delivered as the `ds7` pack of AI-ALL. AI-ALL works without it. For web projects, install the pack; see [Packs](../README.md#packs).
+
+
 The CLI implements only the small list in `src/core.js`. This directory does not make third-party code available, install plugins or guarantee prompt loading. Review current vendor documentation before relying on a native adapter in a particular version/mode.
 
 - Codex AGENTS.md: https://developers.openai.com/codex/guides/agents-md

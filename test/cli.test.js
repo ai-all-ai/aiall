@@ -79,7 +79,9 @@ test('init and sync never overwrite user instructions',()=>{
     run(root,'init');fs.writeFileSync(path.join(root,'ALL.md'),'CUSTOM CONTENT');
     fs.writeFileSync(path.join(root,'AGENTS.md'),'CUSTOM AGENT');
     const result=run(root,'sync');assert.equal(result.status,0,result.stderr);
-    assert.equal(fs.readFileSync(path.join(root,'ALL.md'),'utf8'),'CUSTOM CONTENT');
+    const allText=fs.readFileSync(path.join(root,'ALL.md'),'utf8');
+    assert.ok(allText.startsWith('CUSTOM CONTENT'));
+    assert.ok(allText.includes('<!-- aiall:begin packs -->'));
     assert.equal(fs.readFileSync(path.join(root,'AGENTS.md'),'utf8'),'CUSTOM AGENT');
   }finally{cleanup(root);}
 });
