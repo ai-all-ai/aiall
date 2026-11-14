@@ -1,17 +1,45 @@
 name: CI
 on:
   push:
+    branches: [main]
   pull_request:
+    branches: [main]
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node: [18, 20, 22]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: [18, 20, 22, 24]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
-      - run: npm test
+      - run: npm run check
       - run: npm pack --dry-run
+      - name: Smoke-test packed CLI in an isolated project
+        shell: bash
+        run: |
+          set -euo pipefail
+          pack_dir="$RUNNER_TEMP/aiall-pack"
+          project_dir="$RUNNER_TEMP/aiall-smoke/project with spaces"
+          target_dir="$RUNNER_TEMP/aiall-smoke/target project"
+          mkdir -p "$pack_dir" "$project_dir" "$target_dir"
+
+          cd "$pack_dir"
+          npm pack "$GITHUB_WORKSPACE" --json > pack.json
+          archive="$(node -e "process.stdout.write(JSON.parse(require('node:fs').readFileSync('pack.json', 'utf8'))[0].filename)")"
+
+          cd "$project_dir"
+          npm init -y
+          npm install --no-audit --no-fund "$pack_dir/$archive"
+          expected_version="$(node -p "require('./node_modules/@ai.all/aiall/package.json').version")"
+          actual_version="$(npm exec -- aiall --version)"
+          test "$actual_version" = "$expected_version"
+
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            target_dir="$(cygpath -w "$target_dir")"
+          fi
+          npm exec -- aiall init --path "$target_dir"
+          npm exec -- aiall check --path "$target_dir"
